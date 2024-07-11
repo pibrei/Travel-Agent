@@ -8,8 +8,10 @@ from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableSequence
-
+import json
 import bs4
+
+OPENAI_API_KEY = os.environ['OPENAI_API_KEY']
 
 llm = ChatOpenAI(model="gpt-3.5-turbo")
 
@@ -75,5 +77,16 @@ def getResponse(query, llm):
 
 def lambda_handler(event, context):
     query = event.get("question")
+    body = json.loads(event.get('body', {}))
+    query = body.get('question', 'Parametro question não fornecido')
     response = getResponse(query, llm).content
-    return {"body": response, "status": 200}
+    return {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": json.dumps({
+            "message": "Tarefa concluida com sucesso!",
+            "details": response,      
+        })
+    }
